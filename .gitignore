@@ -1,7 +1,9 @@
-*.ss~
-*.ss#*
-.#*.ss
-
-*.scm~
-*.scm#*
-.#*.scm
+*.rkt~
+*.rkt#*
+.#*.rkt
+*.scrbl~
+*.scrbl#*
+.#*.scrbl
+compiled/
+rml-neural/doc/
+/coverage/
