@@ -91,7 +91,7 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flidentity flonum-activator?]
               @defthing[identity activator?])]{
-@$${\phi(v) = v}
+@$${\phi(v_i) = v_i}
 
 @centered{
   @image["scribblings/act-identity->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -100,10 +100,10 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flbinary-step flonum-activator?]
                @defthing[binary-step activator?])]{
-@$${\phi(v) =
+@$${\phi(v_i) =
   \begin{cases}
-    0       & \text{for } v < 0\\
-    1       & \text{for } v \geq 0
+    0       & \text{for } v_i < 0\\
+    1       & \text{for } v_i \geq 0
   \end{cases}}
 
 @centered{
@@ -113,7 +113,7 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flsigmoid flonum-activator?]
                @defthing[sigmoid activator?])]{
-@$${\phi(v) = \frac{1}{1+e^{-v}}}
+@$${\phi(v_i) = \frac{1}{1+e^{-v_i}}}
 
 @centered{
   @image["scribblings/act-sigmoid->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -122,7 +122,7 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[fltanh flonum-activator?]
                @defthing[tanh activator?])]{
-@$${\phi(v) = \tanh(v)}
+@$${\phi(v_i) = \tanh(v_i)}
 
 @centered{
   @image["scribblings/act-tanh->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -131,7 +131,7 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flarc-tan flonum-activator?]
                @defthing[arc-tan activator?])]{
-@$${\phi(v) = \operatorname{atan}^{-1}(v)}
+@$${\phi(v_i) = \operatorname{atan}^{-1}(v_i)}
 
 @centered{
   @image["scribblings/act-arc-tan->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -140,7 +140,7 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flelliot-sigmoid flonum-activator?]
                @defthing[elliot-sigmoid activator?])]{
-@$${\phi(v) = \frac{v}{1+\left|v\right|}}
+@$${\phi(v_i) = \frac{v_i}{1+\left|v_i\right|}}
 
 @centered{
   @image["scribblings/act-elliot-sigmoid->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -153,7 +153,7 @@ shape of the activation function in red and it's derivative in turquoise.
                @defproc[(inverse-square-root-unit
                          [α number?])
                         activator?])]{
-@$${\phi(v) = \frac{v}{\sqrt{1+\alpha v^2}}}
+@$${\phi(v_i) = \frac{v_i}{\sqrt{1+\alpha v_{i}^2}}}
 
 @centered{
   @image["scribblings/act-inverse-square-root-unit->flonum.png" #:scale 0.5]{Sample Plot (α = 0.5)}}
@@ -166,10 +166,10 @@ shape of the activation function in red and it's derivative in turquoise.
                @defproc[(inverse-square-root-linear-unit
                         [α number?])
                        activator?])]{
-@$${\phi(v) =
+@$${\phi(v_i) =
   \begin{cases}
-    \frac{v}{\sqrt{1+\alpha v^2}}  & \text{for } v < 0\\
-    v       & \text{for } v \geq 0
+    \frac{v_i}{\sqrt{1+\alpha v_{i}^2}}  & \text{for } v_i < 0\\
+    v_i       & \text{for } v_i \geq 0
   \end{cases}}
 
 @centered{
@@ -179,10 +179,10 @@ shape of the activation function in red and it's derivative in turquoise.
 @deftogether[(
               @defthing[flrectified-linear-unit flonum-activator?]
                @defthing[rectified-linear-unit activator?])]{
-@$${\phi(v) =
+@$${\phi(v_i) =
   \begin{cases}
-    0       & \text{for } v < 0\\
-    v       & \text{for } v \geq 0
+    0       & \text{for } v_i < 0\\
+    v_i     & \text{for } v_i \geq 0
   \end{cases}}
 
 @centered{
@@ -193,10 +193,10 @@ shape of the activation function in red and it's derivative in turquoise.
               @defproc[(flleaky-rectified-linear-unit [∂ flonum?]) flonum-activator?]
               @defthing[flfixed-leaky-rectified-linear-unit flonum-activator?]
                @defthing[fixed-leaky-rectified-linear-unit activator?])]{
-@$${\phi(v) =
+@$${\phi(v_i) =
   \begin{cases}
-    \delta v  & \text{for } v < 0\\
-    v    & \text{for } v \geq 0
+    \delta v_i  & \text{for } v_i < 0\\
+    v_i         & \text{for } v_i \geq 0
   \end{cases}}
 
 @centered{
@@ -209,7 +209,7 @@ Note that the @italic{fixed} form of this activator uses a delta value @${\delta
 @deftogether[(
               @defthing[flsoftplus flonum-activator?]
                @defthing[softplus activator?])]{
-@$${\phi(v) = \ln\left( 1 + e^v \right)}
+@$${\phi(v_i) = \ln\left( 1 + e^{v_i} \right)}
 
 @centered{
   @image["scribblings/act-softplus->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -218,7 +218,7 @@ Note that the @italic{fixed} form of this activator uses a delta value @${\delta
 @deftogether[(
               @defthing[flbent-identity flonum-activator?]
                @defthing[bent-identity activator?])]{
-@$${\phi(v) = \frac{\sqrt{v^2+1}-1}{2}+v}
+@$${\phi(v_i) = \frac{\sqrt{v_{i}^2+1}-1}{2}+v_i}
 
 @centered{
   @image["scribblings/act-bent-identity->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -227,7 +227,7 @@ Note that the @italic{fixed} form of this activator uses a delta value @${\delta
 @deftogether[(
               @defthing[flsinusoid flonum-activator?]
                @defthing[sinusoid activator?])]{
-@$${\phi(v) = \sin(v)}
+@$${\phi(v_i) = \sin(v_i)}
 
 @centered{
   @image["scribblings/act-sinusoid->flonum.png" #:scale 0.5]{Sample Plot}}
@@ -236,10 +236,10 @@ Note that the @italic{fixed} form of this activator uses a delta value @${\delta
 @deftogether[(
               @defthing[flsinc flonum-activator?]
                @defthing[sinc activator?])]{
-@$${\phi(v) =
+@$${\phi(v_i) =
   \begin{cases}
-    1                  & \text{for } v = 1\\
-    \frac{\sin(v)}{v}  & \text{for } v \neq 0
+    1                      & \text{for } v_i = 1\\
+    \frac{\sin(v_i)}{v_i}  & \text{for } v_i \neq 0
   \end{cases}}
 
 @centered{
@@ -249,7 +249,7 @@ Note that the @italic{fixed} form of this activator uses a delta value @${\delta
 @deftogether[(
               @defthing[flgaussian flonum-activator?]
                @defthing[gaussian activator?])]{
-@$${\phi(v) = e^{-v^2}}
+@$${\phi(v_i) = e^{-v_{i}^2}}
 
 @centered{
   @image["scribblings/act-gaussian->flonum.png" #:scale 0.5]{Sample Plot}}
