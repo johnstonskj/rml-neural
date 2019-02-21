@@ -15,8 +15,7 @@
          (for-syntax
           racket/base
           racket/struct
-          racket/syntax
-          rml-neural/private/act-struct))
+          racket/syntax))
 
 ;; ---------- Internal types
 

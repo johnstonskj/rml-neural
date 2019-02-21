@@ -46,7 +46,7 @@
 ;; ---------- Requirements
 
 (require racket/flonum
-         ;math/flonum   ;; fltanh is painfully slow!
+         (prefix-in flmath: math/flonum)   ;; fltanh is painfully slow!
          (prefix-in math: racket/math)
          rml-neural/private/act-struct
          rml-neural/private/act-syntax)
@@ -64,13 +64,8 @@
 (define flbinary-step
   (make-flonum-activator
    'binary-step
-   (λ (x) (cond
-            [(fl< x 0.0) 0.0]
-            [else 1.0]))
-   (λ (x) (cond
-            [(fl= x 0.0) (error "binary step activation function "
-                                "is not differentiable at 0")]
-            [else 0.0]))))
+   (λ (x) (if (fl< x 0.0) 0.0    1.0))
+   (λ (x) (if (fl= x 0.0) +nan.0 0.0))))
 
 (define-loose-activator binary-step)
 
@@ -88,8 +83,8 @@
 (define fltanh
   (make-flonum-activator
    'tanh
-   math:tanh
-   (λ (x) (fl- 1.0 (flexpt (math:tanh x) 2.0)))))
+   flmath:fltanh
+   (λ (x) (fl- 1.0 (flexpt (flmath:fltanh x) 2.0)))))
 
 (define-loose-activator tanh)
 
@@ -128,12 +123,12 @@
   (define isru (flinverse-square-root-unit α))
   (make-flonum-activator
    'inverse-square-root-linear-unit
-   (λ (x) (cond
-            [(fl< x 0.0) ((activator-f isru) x)]
-            [else x]))
-   (λ (x) (cond
-            [(fl< x 0.0) ((activator-df isru) x)]
-            [else 1.0]))
+   (λ (x) (if (fl< x 0.0)
+              ((activator-f isru) x)
+              x))
+   (λ (x) (if (fl< x 0.0)
+              ((activator-df isru) x)
+              1.0))
    α))
 
 (define-loose-activator inverse-square-root-linear-unit α)
@@ -141,24 +136,16 @@
 (define flrectified-linear-unit
   (make-flonum-activator
    'rectified-linear-unit
-   (λ (x) (cond
-            [(fl< x 0.0) 0.0]
-            [else x]))
-   (λ (x) (cond
-            [(fl< x 0.0) 0.0]
-            [else 1.0]))))
+   (λ (x) (if (fl< x 0.0) 0.0 x))
+   (λ (x) (if (fl< x 0.0) 0.0 1.0))))
 
 (define-loose-activator rectified-linear-unit)
 
 (define (flleaky-rectified-linear-unit ∂)
   (make-flonum-activator
    'fixed-leaky-rectified-linear-unit
-   (λ (x) (cond
-            [(fl< x 0.0) (fl* ∂ x)]
-            [else x]))
-   (λ (x) (cond
-            [(fl< x ∂) 0.0]
-            [else 1.0]))))
+   (λ (x) (if (fl< x 0.0) (fl* ∂ x) x))
+   (λ (x) (if (fl< x ∂)   0.0       1.0))))
 
 (define flfixed-leaky-rectified-linear-unit
   (flleaky-rectified-linear-unit 0.01))
@@ -197,16 +184,12 @@
 (define flsinc
   (make-flonum-activator
    'sinc
-   (λ (x) (cond
-            [(fl= x 0.0) 1.0]
-            [else (fl/ (flsin x)
-                       x)]))
-   (λ (x) (cond
-            [(fl= x 0.0) 0.0]
-            [else (fl- (fl/ (flcos x)
-                            x)
-                       (fl/ (flsin x)
-                            (flexpt x 2.0)))]))))
+   (λ (x) (if (fl= x 0.0) 1.0 (fl/ (flsin x)
+                                   x)))
+   (λ (x) (if (fl= x 0.0) 0.0 (fl- (fl/ (flcos x)
+                                        x)
+                                   (fl/ (flsin x)
+                                        (flexpt x 2.0)))))))
 
 (define-loose-activator sinc)
 
