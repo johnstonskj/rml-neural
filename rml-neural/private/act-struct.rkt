@@ -29,6 +29,8 @@
 
 ;; ---------- Implementation Contracts
 
+;; TODO: syntax-ify these
+
 (define flonum/c
     (make-flat-contract #:name 'flonum/c #:first-order flonum?))
 

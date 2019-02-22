@@ -57,7 +57,7 @@ conversions and allows optimization such as futures to work efficiently.
             ([name symbol?]
              [f real-activation/c]
              [df real-activation/c]
-             [α (or/c number? #f)])]{
+             [α (or/c real? #f)])]{
 This structure provides the activator function, it's derivative, and an optional
 @italic{expectation value} for a given method.
 
