@@ -87,14 +87,14 @@ and all math operations will be assumed to be @racket[flonum] safe.
 @deftogether[(
  @defproc[(make-activator
            [name symbol?]
-           [f (-> number? number?)]
-           [df (-> number? number?)]
+           [f real-activation/c]
+           [df real-activation/c]
            [α (or/c number? #f) #f])
           activator?]
  @defproc[(make-flonum-activator
            [name symbol?]
-           [f (-> flonum? flonum?)]
-           [df (-> flonum? flonum?)]
+           [f flonum-activation/c]
+           [df flonum-activation/c]
            [α (or/c flonum? #f) #f])
           flonum-activator?])]{
 Construct an instance of @racket[activator?] and @racket[flonum-activator?]
