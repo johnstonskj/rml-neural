@@ -46,8 +46,7 @@
 ;; ---------- Requirements
 
 (require racket/flonum
-         (prefix-in flmath: math/flonum)   ;; fltanh is painfully slow!
-         (prefix-in math: racket/math)
+         (prefix-in flmath: math/flonum)
          rml-neural/private/act-struct
          rml-neural/private/act-syntax)
 

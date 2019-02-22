@@ -33,10 +33,30 @@ page has a good overview of a number of activation functions.
 
 @section{Activation Function Structure}
 
+@deftogether[(
+              @defthing[real-activation/c flat-contract?]
+               @defthing[flonum-activation/c flat-contract?])]{
+Contracts used to define the procedures used in the structures below. Both
+activation and derivative functions are represented as a procedure that take
+a single, and return a single, @racket[real?] or @racket[flonum?]. They are
+equivalent to the following contract values.
+
+@racketblock[
+(-> real? real?)
+(-> flonum? flonum?)
+]
+
+@margin-note*{See also @secref["effective-futures" #:doc '(lib "scribblings/guide/guide.scrbl")]
+in @other-doc['(lib "scribblings/guide/guide.scrbl")]} In general it
+is preferable to use the @racket[flonum-activator?] structure and the
+corresponding @racket[flonum-activation/c] form as this reduces the numeric
+conversions and allows optimization such as futures to work efficiently.
+}
+
 @defstruct*[activator
             ([name symbol?]
-             [f (-> number? number?)]
-             [df (-> number? number?)]
+             [f real-activation/c]
+             [df real-activation/c]
              [α (or/c number? #f)])]{
 This structure provides the activator function, it's derivative, and an optional
 @italic{expectation value} for a given method.
@@ -53,8 +73,8 @@ This structure provides the activator function, it's derivative, and an optional
 
 @defstruct*[(flonum-activator activator)
             ([name symbol?]
-             [f (-> flonum? flonum?)]
-             [df (-> flonum? flonum?)]
+             [f flonum-activation/c]
+             [df flonum-activation/c]
              [α (or/c flonum? #f)])]{
 An extension to @racket[activator?] that ensures that @bold{all} values to 
 the functions @racket[f] and @racket[f] as well as the value for @racket[α]
