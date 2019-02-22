@@ -29,47 +29,13 @@
 
 ;; ---------- Implementation Contracts
 
-;; TODO: syntax-ify these
+(require rml-neural/private/contract)
 
-(define flonum/c
-    (make-flat-contract #:name 'flonum/c #:first-order flonum?))
+(define-datatype-contract real)
+(define-function1-contract real activation)
 
-(define flonum-activation/c
-    (make-contract
-     #:name 'flonum-activation/c
-     #:first-order
-     (λ (x) (and (procedure? x) (procedure-arity-includes? x 1)))
-     #:projection
-     (λ (b)
-       (let ([domain ((contract-projection flonum/c) (blame-swap b))]
-             [range ((contract-projection flonum/c) b)])
-         (λ (f)
-           (if (and (procedure? f) (procedure-arity-includes? f 1))
-             (λ (x) (range (f (domain x))))
-             (raise-blame-error
-              b f
-              '(expected "a function taking one, and returning one, flonum" given: "~e")
-              f)))))))
-
-(define real/c
-    (make-flat-contract #:name 'real/c #:first-order real?))
-
-(define real-activation/c
-    (make-contract
-     #:name 'real-activation/c
-     #:first-order
-     (λ (x) (and (procedure? x) (procedure-arity-includes? x 1)))
-     #:projection
-     (λ (b)
-       (let ([domain ((contract-projection real/c) (blame-swap b))]
-             [range ((contract-projection real/c) b)])
-         (λ (f)
-           (if (and (procedure? f) (procedure-arity-includes? f 1))
-             (λ (x) (range (f (domain x))))
-             (raise-blame-error
-              b f
-              '(expected "a function taking one, and returning one, real" given: "~e")
-              f)))))))
+(define-datatype-contract flonum)
+(define-function1-contract flonum activation)
 
 ;; ---------- Implementation Structs
 
