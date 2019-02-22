@@ -5,7 +5,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/johnstonskj/rml-neural/badge.svg?branch=master)](https://coveralls.io/github/johnstonskj/rml-neural?branch=master)
 [![raco pkg install rml-neural](https://img.shields.io/badge/raco%20pkg%20install-rml--neural-blue.svg)](http://pkgs.racket-lang.org/package/rml-neural)
 [![Documentation](https://img.shields.io/badge/raco%20docs-rml--neural-blue.svg)](http://docs.racket-lang.org/rml-neural/index.html)
-[![GitHub stars](https://img.shields.io/github/stars/johnstonskj/rml--neural.svg)](https://github.com/johnstonskj/rml-neural/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/johnstonskj/rml-neural.svg)](https://github.com/johnstonskj/rml-neural/stargazers)
 ![mit License](https://img.shields.io/badge/license-mit-118811.svg)
 
 This package will be a pedantic implementation of basic neural networks for deep learning in Racket. It will not be focused on either performance or scale, but will attempt to be an understandable base to work from.
