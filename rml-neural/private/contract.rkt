@@ -11,7 +11,8 @@
 
 ;; ---------- Requirements
 
-(require racket/contract
+(require racket/bool
+         racket/contract
          (for-syntax
           racket/base
           racket/struct
@@ -28,7 +29,18 @@
      (with-syntax ([name (format-id #'id "~a/c" #'id)]
                    [predicate (format-id #'id "~a?" #'id)])
        #`(define name
-           (make-flat-contract #:name (quote name) #:first-order predicate)))]))
+           (make-flat-contract #:name (quote name)
+                               #:first-order predicate)))]))
+
+(define-syntax (define-optional-datatype-contract stx)
+  (syntax-case stx ()
+    [(_ id)
+     (identifier? #'id)
+     (with-syntax ([name (format-id #'id "maybe-~a/c" #'id)]
+                   [predicate (format-id #'id "~a?" #'id)])
+       #`(define name
+           (make-flat-contract #:name (quote name)
+                               #:first-order (λ (v) (or (predicate v) (false? v))))))]))
 
 (define-syntax (define-function1-contract stx)
   (syntax-case stx ()

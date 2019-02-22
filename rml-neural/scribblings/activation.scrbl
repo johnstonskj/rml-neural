@@ -34,6 +34,12 @@ page has a good overview of a number of activation functions.
 @section{Activation Function Structure}
 
 @deftogether[(
+              @defthing[maybe-real/c flat-contract?]
+               @defthing[maybe-flonum/c flat-contract?])]{
+Contracts that encapsulate the pattern @italic{data-type or false}.
+}
+
+@deftogether[(
               @defthing[real-activation/c flat-contract?]
                @defthing[flonum-activation/c flat-contract?])]{
 Contracts used to define the procedures used in the structures below. Both
@@ -57,7 +63,7 @@ conversions and allows optimization such as futures to work efficiently.
             ([name symbol?]
              [f real-activation/c]
              [df real-activation/c]
-             [α (or/c real? #f)])]{
+             [α maybe-real/c])]{
 This structure provides the activator function, it's derivative, and an optional
 @italic{expectation value} for a given method.
 
@@ -75,7 +81,7 @@ This structure provides the activator function, it's derivative, and an optional
             ([name symbol?]
              [f flonum-activation/c]
              [df flonum-activation/c]
-             [α (or/c flonum? #f)])]{
+             [α maybe-flonum/c])]{
 An extension to @racket[activator?] that ensures that @bold{all} values to 
 the functions @racket[f] and @racket[f] as well as the value for @racket[α]
 are guaranteed to be @racket[flonum?]s. @margin-note*{See also
@@ -89,13 +95,13 @@ and all math operations will be assumed to be @racket[flonum] safe.
            [name symbol?]
            [f real-activation/c]
            [df real-activation/c]
-           [α (or/c number? #f) #f])
+           [α maybe-real/c #f])
           activator?]
  @defproc[(make-flonum-activator
            [name symbol?]
            [f flonum-activation/c]
            [df flonum-activation/c]
-           [α (or/c flonum? #f) #f])
+           [α maybe-flonum/c #f])
           flonum-activator?])]{
 Construct an instance of @racket[activator?] and @racket[flonum-activator?]
 respectively. These constructors makes the value for @racket[α] explicitly

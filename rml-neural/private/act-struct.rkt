@@ -9,12 +9,14 @@
 
 (provide
  real/c
+ maybe-real/c
  real-activation/c
  
  (except-out (struct-out activator)
              activator)
  
  flonum/c
+ maybe-flonum/c
  flonum-activation/c
 
  (except-out (struct-out flonum-activator)
@@ -32,9 +34,12 @@
 (require rml-neural/private/contract)
 
 (define-datatype-contract real)
+(define-optional-datatype-contract real)
 (define-function1-contract real activation)
 
+
 (define-datatype-contract flonum)
+(define-optional-datatype-contract flonum)
 (define-function1-contract flonum activation)
 
 ;; ---------- Implementation Structs
