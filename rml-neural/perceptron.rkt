@@ -186,7 +186,7 @@
 
 (define (dot-product v1 v2)
   (flvector-sum
-   (flvector-map fl* v1 v2)))
+   (flvector* v1 v2)))
              
 (define ∙ dot-product)
 
