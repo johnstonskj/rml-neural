@@ -32,13 +32,13 @@
    [emitted #:mutable]) #:transparent)
 
 (define (input-neuron v)
-  (neuron 'input #f #f (get-value v)))
+  (neuron 'input #f #f (value-or-random v)))
 
 (define (hidden-neuron b i)
-  (neuron 'hidden (get-value b) (if (hash? i) i (make-hasheq)) #f))
+  (neuron 'hidden (value-or-random b) (if (hash? i) i (make-hasheq)) #f))
 
 (define (output-neuron b i)
-  (neuron 'output (get-value b) (if (hash? i) i (make-hasheq)) #f))
+  (neuron 'output (value-or-random b) (if (hash? i) i (make-hasheq)) #f))
 
 (define (fire-neuron n activation-function)
   (unless
@@ -74,36 +74,14 @@
     [(hash-has-key? (neuron-inputs to-neuron) from-neuron)
      (hash-set! (neuron-inputs to-neuron)
                 from-neuron
-                (+ (hash-ref (neuron-inputs to-neuron) from-neuron) (get-value weight)))]
+                (+ (hash-ref (neuron-inputs to-neuron) from-neuron) (value-or-random weight)))]
     [else
-     (hash-set! (neuron-inputs to-neuron) from-neuron (get-value weight))]))  
-
-(define (connect-layers/one-to-one layer-from  layer-to weight)
-  (when (not (equal? (vector-length (layer-neurons layer-from))
-                     (vector-length (layer-neurons layer-to))))
-    (error "requires layers of equal length"))
-  (when (and (flvector? weight)
-             (not (equal? (vector-length (layer-neurons layer-from))
-                          (vector-length weight))))
-    (error "weight vector length must match layer length"))
-  (for ([i (in-range (layer-neurons layer-from))])
-    (define real-weight
-      (cond
-      [(flonum? weight)   weight]
-      [(flvector? weight) (vector-ref weight i)]
-      [(false? weight)    (random)]
-      [else (error "invalid type for weight")]))
-    (create-connection layer-from i layer-to i real-weight)))
+     (hash-set! (neuron-inputs to-neuron) from-neuron (value-or-random weight))]))  
 
 (define (connect-layers/fully layer-from layer-to weight)
   (for* ([i (in-range (vector-length (layer-neurons layer-from)))]
          [j (in-range (vector-length (layer-neurons layer-to)))])
-    (define real-weight
-      (cond
-      [(flonum? weight)   weight]
-      [(flvector? weight) (vector-ref weight i)]
-      [(false? weight)    (random)]
-      [else (error "invalid type for weight")]))
+    (define real-weight (vector-or-value-or-random weight i))
     (create-connection layer-from i layer-to j real-weight)))
 
 ;; ---------- Implementation (layer)
@@ -115,26 +93,17 @@
 (define (create-layer type number-of-neurons constructor)
   (layer type (build-vector number-of-neurons constructor)))
 
-(define (create-input-layer number-of-neurons [input-vector #f])
-  (define values
-    (if (false? input-vector)
-        (make-vector number-of-neurons #f)
-        input-vector))
-  (create-layer 'input number-of-neurons (λ (i) (input-neuron (vector-ref values i)))))
+(define (create-input-layer number-of-neurons [input-value #f])
+  (create-layer 'input number-of-neurons
+                (λ (i) (input-neuron (vector-or-value-or-random input-value i)))))
 
-(define (create-hidden-layer number-of-neurons [bias-vector #f])
-  (define biases
-    (if (false? bias-vector)
-        (make-vector number-of-neurons #f)
-        bias-vector))
-  (create-layer 'hidden number-of-neurons (λ (i) (hidden-neuron (vector-ref biases i) #f))))
+(define (create-hidden-layer number-of-neurons [bias-value #f])
+  (create-layer 'hidden number-of-neurons
+                (λ (i) (hidden-neuron (vector-or-value-or-random bias-value i) #f))))
 
-(define (create-output-layer number-of-neurons [bias-vector #f])
-  (define biases
-    (if (false? bias-vector)
-        (make-vector number-of-neurons #f)
-        bias-vector))
-  (create-layer 'output number-of-neurons (λ (i) (output-neuron (vector-ref biases i) #f))))
+(define (create-output-layer number-of-neurons [bias-value #f])
+  (create-layer 'output number-of-neurons
+                (λ (i) (output-neuron (vector-or-value-or-random bias-value i) #f))))
 
 (define (layer-forward l activation-function)
   (unless
@@ -160,6 +129,17 @@
            (activator-f activation-function)
            (activator-df activation-function)))
 
+(define (create-network/fully-connected layer-sizes activation-function)
+  (define layer-vector (make-vector (vector-length layer-sizes) #f))  
+  (vector-set! layer-vector 0 (create-input-layer (vector-ref layer-sizes 0) 0.0))
+  (for ([i (in-range 1 (vector-length layer-sizes))])
+    (vector-set! layer-vector i (create-hidden-layer (vector-ref layer-sizes i))))
+  (define last-layer (- (vector-length layer-sizes) 1))
+  (vector-set! layer-vector last-layer (create-output-layer (vector-ref layer-sizes last-layer) 0.0))
+  (for ([i (in-range 1 (vector-length layer-sizes))])
+    (connect-layers/fully (vector-ref layer-vector (- i 1)) (vector-ref layer-vector i) #f))
+  (create-network layer-vector activation-function))
+  
 (define (network-forward net)
   (define layers (network-layers net))
   (for ([layer (in-range 1 (vector-length layers))])
@@ -179,10 +159,17 @@
 
 ;; ---------- Internal procedures
 
-(define (get-value f)
-  (if (false? f)
+(define (value-or-random v)
+  (if (false? v)
       (random)
-      f))
+      v))
+
+(define (vector-or-value-or-random v [i #f])
+  (cond
+    [(flonum? v)   v]
+    [(flvector? v) (flvector-ref v i)]
+    [(false? v)    (random)]
+    [else (error "invalid type for value: " v)]))
 
 (define (dot-product v1 v2)
   (flvector-sum
@@ -192,8 +179,8 @@
 
 ;; ---------- Internal tests
 
-(define nand-in (create-input-layer 2 (vector 0.0 0.0)))
-(define nand-out (create-output-layer 1 (vector 3.0)))
+(define nand-in (create-input-layer 2 (flvector 0.0 0.0)))
+(define nand-out (create-output-layer 1 (flvector 3.0)))
 (connect-layers/fully nand-in  nand-out -2.0)
 (define nand-gate (create-network (vector nand-in nand-out) flbinary-perceptron))
 
@@ -206,9 +193,11 @@
 (displayln (network-forward nand-gate))
               
 (define image-in (create-input-layer (* 28 28) 0.0))
-(define image-hidden (create-input-layer 15 0.0))
+(define image-hidden (create-hidden-layer 15 0.0))
 (connect-layers/fully image-in image-hidden #f)
 (define image-out (create-output-layer 10 0.0))
 (connect-layers/fully image-hidden image-out #f)
 (define image-to-number (create-network (vector image-in image-hidden image-out) flbinary-perceptron))
+
+(create-network/fully-connected (vector (* 28 28) 15 10) flsigmoid)
 
