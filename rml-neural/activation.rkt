@@ -15,6 +15,8 @@
  identity
  flbinary-step
  binary-step
+ flbinary-perceptron
+ binary-perceptron
  flsigmoid
  sigmoid
  fltanh
@@ -67,6 +69,14 @@
    (λ (x) (if (fl= x 0.0) +nan.0 0.0))))
 
 (define-loose-activator binary-step)
+
+(define flbinary-perceptron
+  (make-flonum-activator
+   'binary-perceptron
+   (λ (x) (if (fl<= x 0.0) 0.0 1.0))
+   (λ (x) x)))
+
+(define-loose-activator binary-perceptron)
 
 (define flsigmoid
   (let ([σ (λ (x) (fl/ 1.0

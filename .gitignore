@@ -4,6 +4,7 @@
 *.scrbl~
 *.scrbl#*
 .#*.scrbl
+*.md~
 compiled/
 rml-neural/doc/
 /coverage/

@@ -17,7 +17,9 @@
 (require racket/bool
          racket/flonum
          racket/vector
-         math/flonum)
+         (except-in math/flonum
+                    fltanh)
+         "activation.rkt")
 
 ;; ---------- Internal types
 
@@ -33,12 +35,12 @@
   (neuron 'input #f #f (get-value v)))
 
 (define (hidden-neuron b i)
-  (neuron 'hidden (get-value b) (if (hash? i) i (make-hash)) #f))
+  (neuron 'hidden (get-value b) (if (hash? i) i (make-hasheq)) #f))
 
 (define (output-neuron b i)
-  (neuron 'output (get-value b) (if (hash? i) i (make-hash)) #f))
+  (neuron 'output (get-value b) (if (hash? i) i (make-hasheq)) #f))
 
-(define (emit n)
+(define (fire-neuron n activation-function)
   (unless
       (equal? (neuron-type n) 'input)
     (define result
@@ -50,9 +52,7 @@
     (define w (vector (hash-values (neuron-inputs n))))
     (define x (vector (map neuron-emitted (hash-keys (neuron-inputs n)))))
     (displayln (format "(w=~a ∙ x=~a) + b=~a = ~a" w x (neuron-bias n) result))
-    (set-neuron-emitted! n (cond
-                             [(fl<= result 0.0) 0.0]
-                             [else              1.0]))))
+    (set-neuron-emitted! n (activation-function result))))
 
 ;; ---------- Implementation (connections)
 
@@ -61,6 +61,7 @@
    weight))
 
 (define (create-connection layer-from from-index layer-to to-index weight)
+  ;; do not currently support https://en.wikipedia.org/wiki/Recurrent_neural_network
   (when (equal? layer-from layer-to)
     (error "may not add connections within a layer"))
   (when (equal? (layer-type layer-to) 'input)
@@ -68,18 +69,22 @@
   (when (equal? (layer-type layer-from) 'output)
     (error "may not add connections from an output layer"))
   (define to-neuron (vector-ref (layer-neurons layer-to) to-index))
-  ;; make hash of input-neuron -> weight
   (define from-neuron (vector-ref (layer-neurons layer-from) from-index))
   (cond
     [(hash-has-key? (neuron-inputs to-neuron) from-neuron)
-     (hash-set! (neuron-inputs to-neuron) from-neuron (+ (hash-ref (neuron-inputs to-neuron) from-neuron) (get-value weight)))]
+     (hash-set! (neuron-inputs to-neuron)
+                from-neuron
+                (+ (hash-ref (neuron-inputs to-neuron) from-neuron) (get-value weight)))]
     [else
      (hash-set! (neuron-inputs to-neuron) from-neuron (get-value weight))]))  
 
 (define (connect-layers/one-to-one layer-from  layer-to weight)
-  (when (not (equal? (vector-length (layer-neurons layer-from)) (vector-length (layer-neurons layer-to))))
+  (when (not (equal? (vector-length (layer-neurons layer-from))
+                     (vector-length (layer-neurons layer-to))))
     (error "requires layers of equal length"))
-  (when (and (flvector? weight) (not (equal? (vector-length (layer-neurons layer-from)) (vector-length weight))))
+  (when (and (flvector? weight)
+             (not (equal? (vector-length (layer-neurons layer-from))
+                          (vector-length weight))))
     (error "weight vector length must match layer length"))
   (for ([i (in-range (layer-neurons layer-from))])
     (define real-weight
@@ -131,40 +136,46 @@
         bias-vector))
   (create-layer 'output number-of-neurons (λ (i) (output-neuron (vector-ref biases i) #f))))
 
-(define (layer-forward l)
+(define (layer-forward l activation-function)
   (unless
       (equal? (layer-type l) 'input)
     (for ([n (layer-neurons l)])
-      (emit n))))
+      (fire-neuron n activation-function))))
 
 ;; ---------- Implementation (network)
 
 (struct network
-  (layers))
+  (layers
+   forward-function
+   backward-function))
 
-(define (create-network layers)
+(define (create-network layers activation-function)
   (when (< (vector-length layers) 2)
     (error "need more than one layer dufus"))
   (when (not (equal? (layer-type (vector-ref layers 0)) 'input))
     (error "your first layer needs to be an input layer"))
   (when (not (equal? (layer-type (vector-ref layers (- (vector-length layers) 1))) 'output))
     (error "your last layer needs to be an output layer"))
-  (network layers))
+  (network layers
+           (activator-f activation-function)
+           (activator-df activation-function)))
 
 (define (network-forward net)
   (define layers (network-layers net))
   (for ([layer (in-range 1 (vector-length layers))])
-    (layer-forward (vector-ref layers layer)))
+    (layer-forward (vector-ref layers layer) (network-forward-function net)))
   (define last-layer (layer-neurons (vector-ref layers (- (vector-length layers) 1))))
   (for/flvector ([neuron last-layer])
     (neuron-emitted neuron)))
 
 (define (reset-input net in-vector)
   (define input-layer (vector-ref (network-layers net) 0))
-  (when (not (equal? (vector-length input-layer) (vector-length in-vector)))
+  (when (not (equal? (vector-length (layer-neurons input-layer)) (vector-length in-vector)))
     (error "input value vector does not match number of input neurons"))
-  (for (
-  )
+  (define neurons (layer-neurons (vector-ref (network-layers net) 0)))
+  (for ([i (in-range (vector-length in-vector))])
+    (define neuron (vector-ref neurons i))
+    (set-neuron-emitted! neuron (vector-ref in-vector i))))
 
 ;; ---------- Internal procedures
 
@@ -181,16 +192,23 @@
 
 ;; ---------- Internal tests
 
-(define nand-in (create-input-layer 2 (vector 1.0 0.0)))
+(define nand-in (create-input-layer 2 (vector 0.0 0.0)))
 (define nand-out (create-output-layer 1 (vector 3.0)))
 (connect-layers/fully nand-in  nand-out -2.0)
-(define nand-gate (create-network (vector nand-in nand-out)))
+(define nand-gate (create-network (vector nand-in nand-out) flbinary-perceptron))
+
 (displayln (network-forward nand-gate))
+(reset-input nand-gate (vector 1.0 0.0))
+(displayln (network-forward nand-gate))
+(reset-input nand-gate (vector 0.0 1.0))
+(displayln (network-forward nand-gate))
+(reset-input nand-gate (vector 1.0 1.0))
+(displayln (network-forward nand-gate))
+              
+(define image-in (create-input-layer (* 28 28) 0.0))
+(define image-hidden (create-input-layer 15 0.0))
+(connect-layers/fully image-in image-hidden #f)
+(define image-out (create-output-layer 10 0.0))
+(connect-layers/fully image-hidden image-out #f)
+(define image-to-number (create-network (vector image-in image-hidden image-out) flbinary-perceptron))
 
-(define input-layer (create-input-layer 4))
-(define output-layer (create-output-layer 6))
-(connect-layers/fully input-layer  output-layer 3.0)
-
-(define net (create-network (vector input-layer output-layer)))
-
-(displayln (network-forward net))
