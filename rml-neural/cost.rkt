@@ -33,12 +33,20 @@
 (define (vector-euclidean-length v)
   (flsqrt (flvector-sum (flvector-sqr v))))
 
-(mean-squared-error
- (vector (flvector 1.0))
- (vector (flvector 0.0)))
-(mean-squared-error
- (vector (flvector 1.0))
- (vector (flvector 0.5)))
-(mean-squared-error
- (vector (flvector 1.0))
- (vector (flvector 0.8)))
+;; ---------- Internal tests
+
+(module+ test
+  (require rackunit)
+  
+  (check-equal? (mean-squared-error
+                 (vector (flvector 1.0))
+                 (vector (flvector 0.0)))
+                0.5)
+  (check-equal? (mean-squared-error
+                 (vector (flvector 1.0))
+                 (vector (flvector 0.5)))
+                0.125)
+  (check-equal? (mean-squared-error
+                 (vector (flvector 1.0))
+                 (vector (flvector 0.8)))
+                0.01999999999999999))

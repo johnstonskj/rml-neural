@@ -51,7 +51,7 @@
        (neuron-bias n)))
     (define w (vector (hash-values (neuron-inputs n))))
     (define x (vector (map neuron-emitted (hash-keys (neuron-inputs n)))))
-    (displayln (format "(w=~a ∙ x=~a) + b=~a = ~a" w x (neuron-bias n) result))
+;;    (displayln (format "(w=~a ∙ x=~a) + b=~a = ~a" w x (neuron-bias n) result))
     (set-neuron-emitted! n (activation-function result))))
 
 ;; ---------- Implementation (connections)
@@ -157,6 +157,9 @@
     (define neuron (vector-ref neurons i))
     (set-neuron-emitted! neuron (vector-ref in-vector i))))
 
+(define (train net data-stream expected-stream cost-function)
+  (error "undefined"))
+
 ;; ---------- Internal procedures
 
 (define (value-or-random v)
@@ -179,25 +182,25 @@
 
 ;; ---------- Internal tests
 
-(define nand-in (create-input-layer 2 (flvector 0.0 0.0)))
-(define nand-out (create-output-layer 1 (flvector 3.0)))
-(connect-layers/fully nand-in  nand-out -2.0)
-(define nand-gate (create-network (vector nand-in nand-out) flbinary-perceptron))
+(module+ test
+  (require rackunit)
+  
+  (define nand-in (create-input-layer 2 (flvector 0.0 0.0)))
+  (define nand-out (create-output-layer 1 (flvector 3.0)))
+  (connect-layers/fully nand-in  nand-out -2.0)
+  (define nand-gate (create-network (vector nand-in nand-out) flbinary-perceptron))
 
-(displayln (network-forward nand-gate))
-(reset-input nand-gate (vector 1.0 0.0))
-(displayln (network-forward nand-gate))
-(reset-input nand-gate (vector 0.0 1.0))
-(displayln (network-forward nand-gate))
-(reset-input nand-gate (vector 1.0 1.0))
-(displayln (network-forward nand-gate))
-              
-(define image-in (create-input-layer (* 28 28) 0.0))
-(define image-hidden (create-hidden-layer 15 0.0))
-(connect-layers/fully image-in image-hidden #f)
-(define image-out (create-output-layer 10 0.0))
-(connect-layers/fully image-hidden image-out #f)
-(define image-to-number (create-network (vector image-in image-hidden image-out) flbinary-perceptron))
+  (check-equal? (network-forward nand-gate) (flvector 1.0))
+  
+  (reset-input nand-gate (vector 1.0 0.0))
+  (check-equal?  (network-forward nand-gate) (flvector 1.0))
+  
+  (reset-input nand-gate (vector 0.0 1.0))
+  (check-equal?  (network-forward nand-gate) (flvector 1.0))
+  
+  (reset-input nand-gate (vector 1.0 1.0))
+  (check-equal?  (network-forward nand-gate) (flvector 0.0))
 
-(create-network/fully-connected (vector (* 28 28) 15 10) flsigmoid)
-
+  (time (create-network/fully-connected (vector (* 28 28) 15 10) flsigmoid))
+  (define example (create-network/fully-connected (vector (* 28 28) 15 10) flsigmoid))
+  (time (displayln (network-forward example))))
